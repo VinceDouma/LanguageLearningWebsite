@@ -18,7 +18,6 @@ export default function KoreanApp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(null);
-  const [noteInEnglish, setNoteInEnglish] = useState(false);
   const [hoveredLetter, setHoveredLetter] = useState(null);
 
   const translate = useCallback(async () => {
@@ -27,7 +26,6 @@ export default function KoreanApp() {
     setLoading(true);
     setError(null);
     setResult(null);
-    setNoteInEnglish(false);
     try {
       const res = await fetch("http://localhost:8000/api/translate/korean", {
         method: "POST",
@@ -37,7 +35,7 @@ export default function KoreanApp() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       if (!res.ok) throw new Error("Translation failed");
-      if (!data.hangul || !data.romanized) throw new Error("Invalid response format from model");
+      if (!data.hangul) throw new Error("Invalid response format from model");
       setResult(data);
     } catch (err) {
       setError(err.message || "Translation failed. Please try again.");
@@ -144,7 +142,7 @@ export default function KoreanApp() {
             한국어 Translator
           </h1>
           <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#2a3f6e", marginTop: 8, letterSpacing: "0.05em" }}>
-            English → Hangul + Romanization
+            English → Korean
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 18 }}>
             {["translator", "quiz-menu", "memory", "writing", "reading", "music"].map(tab => (
@@ -194,34 +192,14 @@ export default function KoreanApp() {
                 {result && (
                   <>
                     <div style={{ padding: "1.5rem 1.5rem 1.25rem" }}>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: "0.18em", color: "#5b8dee", textTransform: "uppercase", marginBottom: 12 }}>Hangul</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: "0.18em", color: "#5b8dee", textTransform: "uppercase", marginBottom: 12 }}>Korean translation</div>
                       <div style={{ fontFamily: "'Noto Sans KR', sans-serif", fontSize: 30, fontWeight: 300, color: "#e8eeff", lineHeight: 1.5 }}>{result.hangul}</div>
                     </div>
-                    <div style={{ height: 1, background: "#0e1a35", margin: "0 1.5rem" }} />
-                    <div style={{ padding: "1.25rem 1.5rem" }}>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: "0.18em", color: "#2a3f6e", textTransform: "uppercase", marginBottom: 10 }}>Romanized</div>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 15, fontStyle: "italic", color: "#4a6eaa", lineHeight: 1.7 }}>{result.romanized}</div>
-                    </div>
-                    <div style={{ height: 1, background: "#0e1a35", margin: "0 1.5rem" }} />
-                    <div style={{ padding: "1.25rem 1.5rem" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: "0.18em", color: "#2a3f6e", textTransform: "uppercase" }}>Usage note</div>
-                        <button className="toggle-btn" onClick={() => setNoteInEnglish(v => !v)}
-                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, padding: "3px 10px", background: "transparent", border: `1px solid ${noteInEnglish ? "#5b8dee" : "#162040"}`, borderRadius: 5, color: noteInEnglish ? "#5b8dee" : "#2a3f6e", cursor: "pointer" }}>
-                          {noteInEnglish ? "KR" : "EN"}
-                        </button>
-                      </div>
-                      <div style={{ fontFamily: noteInEnglish ? "'Cormorant Garamond', serif" : "'Noto Sans KR', sans-serif", fontSize: 15, fontStyle: "italic", color: "#2a3f6e", lineHeight: 1.7 }}>
-                        {noteInEnglish ? result.notes_english ?? result.notes : result.notes}
-                      </div>
-                    </div>
                     <div style={{ borderTop: "1px solid #0e1a35", padding: "0.85rem 1.5rem", display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {[["hangul", "Copy Hangul"], ["romanized", "Copy Romanized"]].map(([key, label]) => (
-                        <button key={key} className="copy-btn" onClick={() => copyText(result[key], key)}
-                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "5px 14px", border: `1px solid ${copied === key ? "#4caf7d" : "#162040"}`, borderRadius: 6, background: "transparent", color: copied === key ? "#4caf7d" : "#2a3f6e", cursor: "pointer" }}>
-                          {copied === key ? "✓ Copied" : label}
-                        </button>
-                      ))}
+                      <button className="copy-btn" onClick={() => copyText(result.hangul, "hangul")}
+                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "5px 14px", border: `1px solid ${copied === "hangul" ? "#4caf7d" : "#162040"}`, borderRadius: 6, background: "transparent", color: copied === "hangul" ? "#4caf7d" : "#2a3f6e", cursor: "pointer" }}>
+                        {copied === "hangul" ? "✓ Copied" : "Copy Korean"}
+                      </button>
                       <button className="copy-btn" onClick={() => pronounceKorean(result.hangul)}
                         style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "5px 14px", border: "1px solid #162040", borderRadius: 6, background: "transparent", color: "#2a3f6e", cursor: "pointer" }}>
                         🔊 Pronounce
